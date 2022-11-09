@@ -6,7 +6,7 @@ SECRET_KEY = 'django-insecure-uez+d_k3fijqa%y-q@zts%tz(=d(^+k8frk5mdbhykp60r&1xz
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['0.0.0.0']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -19,8 +19,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
+    'colorfield',
+    'corsheaders',
 
     'api',
+    'recipes',
     'users',
 ]
 
@@ -32,6 +35,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -114,3 +120,9 @@ STATIC_URL = 'static/'
 AUTH_USER_MODEL = 'users.User'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CORS_URLS_REGEX = r'^/api/.*$'
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+]

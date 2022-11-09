@@ -75,7 +75,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self) -> str:
         """Return string representation of the object."""
-        return self.username
+        return f'{self.username}'
 
     class Meta:
         verbose_name = 'User'
