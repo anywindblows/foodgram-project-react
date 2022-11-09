@@ -1,0 +1,17 @@
+.git
+.gitignore
+.dockerignore
+.editorconfig
+.env
+
+__pycahce__
+
+README.md
+LICENSE
+Dockerfile
+
+node_modules
+venv
+docs
+
+# COMPLETE FILE
