@@ -1,5 +1,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
+
+from .models import Ingredient, Recipe, Tag, IngredientAmount
 
 User = get_user_model()
 
@@ -11,4 +14,61 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             'email', 'id', 'username', 'first_name',
             'last_name', 'is_subscribed'
+        )
+
+
+class TagSerializer(serializers.ModelSerializer):
+    """Serializer for TagModel."""
+    class Meta:
+        model = Tag
+        fields = ('id', 'name', 'color', 'slug')
+
+
+class IngredientSerializer(serializers.ModelSerializer):
+    """Serializer for IngredientModel."""
+
+    class Meta:
+        model = Ingredient
+        fields = ('id', 'name', 'measurement_unit')
+
+    def to_representation(self, instance):
+        response = super().to_representation(instance)
+        response['measurement_unit'] = instance.measurement_unit.unit
+        return response
+
+
+class IngredientAmountSerializer(serializers.ModelSerializer):
+    """Serializer for IngredientAmountSerializer."""
+    id = serializers.ReadOnlyField(source='ingredient.id')
+    name = serializers.ReadOnlyField(source='ingredient.name')
+    # measurement_unit = serializers.ReadOnlyField(
+    #     source='ingredient.measurement_unit'
+    # )
+
+    class Meta:
+        model = IngredientAmount
+        fields = ('id', 'name', 'amount')           # TODO: add 'measurement_unit' to ser.
+        validators = [
+            UniqueTogetherValidator(
+                queryset=IngredientAmount.objects.all(),
+                fields=['ingredient', 'recipe']
+            )
+        ]
+
+
+class RecipeSerializer(serializers.ModelSerializer):
+    """Serializer for RecipeModel."""
+    author = UserSerializer(read_only=True)
+    tags = TagSerializer(read_only=True, many=True)
+    ingredients = IngredientAmountSerializer(
+        read_only=True,
+        many=True,
+        source='ingredientamount_set'
+    )
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id', 'tags', 'author', 'ingredients',
+            'name', 'image', 'text', 'cooking_time'
         )

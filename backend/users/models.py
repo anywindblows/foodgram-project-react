@@ -7,7 +7,7 @@ class CustomUserManager(BaseUserManager):
     """Custom user manager."""
 
     def create_user(self, username, password, **kwargs):
-        """Creating a regular user."""
+        """Creating a user."""
         user = self.model(
             username=username,
             password=password,
@@ -36,7 +36,7 @@ class CustomUserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    """Custom user model."""
+    """Stores a single custom user entry."""
     email = models.EmailField(
         unique=True,
         max_length=254,

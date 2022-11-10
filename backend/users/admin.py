@@ -59,7 +59,10 @@ class UserChangeForm(forms.ModelForm):
 
 
 class UserAdmin(BaseUserAdmin):
-    """User admin panel."""
+    """
+    User admin panel.
+    With custom filter params.
+    """
     form = UserChangeForm
     add_form = UserCreationForm
 
