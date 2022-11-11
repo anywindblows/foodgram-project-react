@@ -61,9 +61,8 @@ class Ingredient(models.Model):
         verbose_name='Ingredients'
     )
 
-    measurement_unit = models.ForeignKey(
-        MeasurementUnit,
-        on_delete=models.CASCADE,  # TODO: complete after connect front
+    measurement_unit = models.CharField(
+        max_length=200,
         verbose_name='Measurement unit'
     )
 
@@ -96,8 +95,8 @@ class Recipe(models.Model):  # TODO: correct max_length param
     )
 
     image = models.ImageField(
-        upload_to='images/',
-        verbose_name='Image'
+        upload_to='images/recipe_images/',
+        verbose_name='Image',
     )
 
     text = models.CharField(
@@ -159,3 +158,25 @@ class IngredientAmount(models.Model):
         verbose_name = 'Ingredient amount'
         verbose_name_plural = 'Ingredients amount'
         db_table = 'ingredient_amount'
+
+
+class Favorite(models.Model):
+    """
+    Stores a single favorite recipe entry,
+    related to :model:`user.User` and :model:`recipe.Recipe`.
+    """
+
+    recipe = models.ManyToManyField(
+        Recipe,
+        verbose_name='Recipe',
+    )
+
+    user = models.ManyToManyField(
+        User,
+        verbose_name='User'
+    )
+
+    class Meta:
+        verbose_name = 'Favorite'
+        verbose_name_plural = 'Favorites'
+        db_table = 'favorites'

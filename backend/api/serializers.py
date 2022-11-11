@@ -33,21 +33,21 @@ class IngredientSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         response = super().to_representation(instance)
-        response['measurement_unit'] = instance.measurement_unit.unit
+        response['measurement_unit'] = instance.measurement_unit
         return response
 
 
 class IngredientAmountSerializer(serializers.ModelSerializer):
-    """Serializer for IngredientAmountSerializer."""
+    """Serializer for IngredientAmountModel."""
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
-    # measurement_unit = serializers.ReadOnlyField(
-    #     source='ingredient.measurement_unit'
-    # )
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit'
+    )
 
     class Meta:
         model = IngredientAmount
-        fields = ('id', 'name', 'amount')           # TODO: add 'measurement_unit' to ser.
+        fields = ('id', 'name', 'measurement_unit', 'amount')
         validators = [
             UniqueTogetherValidator(
                 queryset=IngredientAmount.objects.all(),

@@ -1,3 +1,4 @@
+from os import path
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,6 +22,7 @@ INSTALLED_APPS = [
     'djoser',
     'colorfield',
     'corsheaders',
+    'django_filters',
 
     'api',
     'users',
@@ -40,6 +42,9 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'config.urls'
+
+TEMPLATES_DIR = path.join(BASE_DIR, 'templates')
+STATICFILES_DIRS = [path.join(BASE_DIR, 'static')]
 
 TEMPLATES = [
     {
@@ -91,6 +96,9 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend'
+    ],
 }
 
 DJOSER = {
@@ -114,6 +122,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
+MEDIA_URL = 'media/'
 
 AUTH_USER_MODEL = 'users.User'
 
