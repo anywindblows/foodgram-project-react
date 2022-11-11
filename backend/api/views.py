@@ -2,7 +2,7 @@ from django_filters import rest_framework as drf_filter
 from rest_framework import viewsets
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from .filters import RecipeFilter
+from .filters import RecipeFilter, IngredientSearchFilter
 from .models import Ingredient, Recipe, Tag, Favorite
 from .permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
 from .serializers import (IngredientSerializer,
@@ -21,6 +21,8 @@ class IngredientsViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
+    filter_backends = (IngredientSearchFilter,)
+    search_fields = ('^name',)
 
 
 class RecipesViewSet(viewsets.ModelViewSet):

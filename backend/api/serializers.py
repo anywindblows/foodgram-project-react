@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
@@ -65,6 +66,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         many=True,
         source='ingredientamount_set'
     )
+    image = Base64ImageField()
 
     class Meta:
         model = Recipe
@@ -72,3 +74,11 @@ class RecipeSerializer(serializers.ModelSerializer):
             'id', 'tags', 'author', 'ingredients',
             'name', 'image', 'text', 'cooking_time'
         )
+
+    def create(self, validated_data):
+        image = validated_data.pop('image')
+        recipes = Recipe.objects.create(
+            image=image,
+            **validated_data
+        )
+        return recipes
