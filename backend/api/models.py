@@ -1,7 +1,7 @@
 from colorfield.fields import ColorField
 from django.contrib.auth import get_user_model
-from django.db import models
 from django.core.validators import MinValueValidator
+from django.db import models
 
 User = get_user_model()
 
@@ -10,17 +10,19 @@ class Tag(models.Model):
     """Stores a single tag entry."""
     name = models.CharField(
         unique=True,
-        max_length=254,
+        max_length=200,
         verbose_name='Tag'
     )
 
     color = ColorField(
-        verbose_name='Color'
+        unique=True,
+        verbose_name='Color',
+        max_length=7
     )
 
     slug = models.SlugField(
         unique=True,
-        max_length=254,
+        max_length=200,
         verbose_name='Slug'
     )
 
@@ -28,26 +30,10 @@ class Tag(models.Model):
         return f'{self.name}'
 
     class Meta:
+        ordering = ['-id']
         verbose_name = 'Tag'
         verbose_name_plural = 'Tags'
         db_table = 'tags'
-
-
-class MeasurementUnit(models.Model):
-    """Stores a single measurement unit entry."""
-    unit = models.CharField(
-        unique=True,
-        max_length=50,  # TODO: DEFINE MAX LENGTH
-        verbose_name='Measurement Unit'
-    )
-
-    def __str__(self):
-        return f'{self.unit}'
-
-    class Meta:
-        verbose_name = 'Measurement Unit'
-        verbose_name_plural = 'Measurement Units'
-        db_table = 'measurement_units'
 
 
 class Ingredient(models.Model):
@@ -57,7 +43,7 @@ class Ingredient(models.Model):
     """
     name = models.CharField(
         unique=True,
-        max_length=254,
+        max_length=200,
         verbose_name='Ingredients'
     )
 
@@ -70,12 +56,13 @@ class Ingredient(models.Model):
         return f'{self.name}'
 
     class Meta:
+        ordering = ['-id']
         verbose_name = 'Ingredient'
         verbose_name_plural = 'Ingredients'
-        db_table = 'ingredient'
+        db_table = 'ingredients'
 
 
-class Recipe(models.Model):  # TODO: correct max_length param
+class Recipe(models.Model):
     """
     Stores a single recipe entry, related to:
     :model:`author.User`,
@@ -106,6 +93,8 @@ class Recipe(models.Model):  # TODO: correct max_length param
 
     ingredients = models.ManyToManyField(
         Ingredient,
+        through='IngredientAmount',
+        related_name='recipes',
         verbose_name='Ingredients'
     )
 
@@ -116,7 +105,7 @@ class Recipe(models.Model):  # TODO: correct max_length param
 
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Cooking time',
-        validators=[MinValueValidator(1)]
+        validators=[MinValueValidator(limit_value=1)]
     )
 
     def __str__(self):
@@ -147,7 +136,7 @@ class IngredientAmount(models.Model):
     )
 
     amount = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1)],
+        validators=[MinValueValidator(limit_value=1)],
         verbose_name='Amount',
     )
 
@@ -157,26 +146,68 @@ class IngredientAmount(models.Model):
     class Meta:
         verbose_name = 'Ingredient amount'
         verbose_name_plural = 'Ingredients amount'
-        db_table = 'ingredient_amount'
+        db_table = 'ingredients_amount'
 
 
 class Favorite(models.Model):
     """
     Stores a single favorite recipe entry,
-    related to :model:`user.User` and :model:`recipe.Recipe`.
+    related to :model:`recipe.Recipe` and :model:`user.User`.
     """
 
-    recipe = models.ManyToManyField(
+    recipe = models.ForeignKey(
         Recipe,
+        on_delete=models.CASCADE,
+        related_name='favorites',
         verbose_name='Recipe',
     )
 
-    user = models.ManyToManyField(
+    user = models.ForeignKey(
         User,
-        verbose_name='User'
+        on_delete=models.CASCADE,
+        verbose_name='User',
     )
 
     class Meta:
+        ordering = ['-id']
         verbose_name = 'Favorite'
         verbose_name_plural = 'Favorites'
         db_table = 'favorites'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'user'],
+                name='Favorite user recipes'
+            )
+        ]
+
+
+class Cart(models.Model):
+    """
+    Stores a single user cart entry,
+    related to :model:`recipe.Recipe` and :model:`user.User`.
+    """
+
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='cart',
+        verbose_name='Recipe',
+    )
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='User',
+    )
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = 'Cart'
+        verbose_name_plural = 'Carts'
+        db_table = 'cart'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'user'],
+                name='User carts'
+            )
+        ]

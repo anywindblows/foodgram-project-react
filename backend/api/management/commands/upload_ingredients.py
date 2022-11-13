@@ -1,16 +1,17 @@
-import os
 import json
+import os
 
 from django.conf import settings
-from api.models import Ingredient
 from django.core.management.base import BaseCommand, CommandError
+
+from api.models import Ingredient
 
 DATA_ROOT = os.path.join(settings.BASE_DIR, '../data/ingredients.json')
 print(settings.BASE_DIR)
 
 
-class Command(BaseCommand):
-    help = 'loading ingredients from data in json'
+class Command(BaseCommand):     # TODO: Switch to --flag filename and use without full path.
+    help = 'loading ingredients from data in json'      # TODO: fix errors
 
     def handle(self, *args, **options):
         try:

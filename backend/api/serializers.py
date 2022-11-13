@@ -3,7 +3,10 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from .models import Ingredient, Recipe, Tag, IngredientAmount
+from services.api_services import (create_ingredient_amount_relations,
+                                   get_exists_models_relations)
+
+from .models import Ingredient, IngredientAmount, Recipe, Tag, Favorite
 
 User = get_user_model()
 
@@ -27,15 +30,9 @@ class TagSerializer(serializers.ModelSerializer):
 
 class IngredientSerializer(serializers.ModelSerializer):
     """Serializer for IngredientModel."""
-
     class Meta:
         model = Ingredient
         fields = ('id', 'name', 'measurement_unit')
-
-    def to_representation(self, instance):
-        response = super().to_representation(instance)
-        response['measurement_unit'] = instance.measurement_unit
-        return response
 
 
 class IngredientAmountSerializer(serializers.ModelSerializer):
@@ -48,7 +45,7 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IngredientAmount
-        fields = ('id', 'name', 'measurement_unit', 'amount')
+        fields = ('id', 'name', 'measurement_unit', 'amount',)
         validators = [
             UniqueTogetherValidator(
                 queryset=IngredientAmount.objects.all(),
@@ -57,28 +54,84 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
         ]
 
 
-class RecipeSerializer(serializers.ModelSerializer):
+class RecipeSerializer(serializers.ModelSerializer):       # TODO: add docstring
     """Serializer for RecipeModel."""
+    image = Base64ImageField()
     author = UserSerializer(read_only=True)
     tags = TagSerializer(read_only=True, many=True)
     ingredients = IngredientAmountSerializer(
-        read_only=True,
+        source='ingredientamount_set',
         many=True,
-        source='ingredientamount_set'
+        read_only=True
     )
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
+
+    class Meta:                                                     # TODO: NestedValidationError and ValidationError
+        model = Recipe
+        fields = (
+            'id', 'tags', 'author', 'ingredients', 'is_favorited',
+            'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time'
+        )
+
+    def validate(self, data):
+        ingredients = self.initial_data.get('ingredients')
+        tags = self.initial_data.get('tags')
+        data['ingredients'] = ingredients
+        data['tags'] = tags                                         # TODO: VALIDATE ALL (TAGS, INGREDIENTS AND ETC)
+        return data
+
+    def create(self, validated_data):
+        tags, ingredients = (
+            validated_data.pop('tags'),
+            validated_data.pop('ingredients')
+        )
+        recipe = Recipe.objects.create(**validated_data)
+
+        create_ingredient_amount_relations(ingredients, recipe)
+        recipe.tags.set(tags)
+
+        return recipe
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.image)
+        instance.image = validated_data.get('image', instance.image)
+        instance.text = validated_data.get('text', instance.text)
+        instance.cooking_time = validated_data.get(
+            'cooking_time', instance.cooking_time
+        )
+
+        instance.tags.clear()
+        tags = self.initial_data.get('tags')
+        instance.tags.set(tags)
+
+        IngredientAmount.objects.filter(recipe=instance).all().delete()
+
+        create_ingredient_amount_relations(
+            validated_data.get('ingredients'),
+            instance
+        )
+        instance.save()
+
+        return instance
+
+    def get_is_favorited(self, obj):
+        user = self.context.get('request').user
+        params = {'favorites__user': user, 'id': obj.id}
+
+        return get_exists_models_relations(user, Recipe, params)
+
+    def get_is_in_shopping_cart(self, obj):
+        user = self.context.get('request').user
+        params = {'cart__user': user, 'id': obj.id}
+
+        return get_exists_models_relations(user, Recipe, params)
+
+
+class ShortRecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
 
     class Meta:
         model = Recipe
-        fields = (
-            'id', 'tags', 'author', 'ingredients',
-            'name', 'image', 'text', 'cooking_time'
-        )
-
-    def create(self, validated_data):
-        image = validated_data.pop('image')
-        recipes = Recipe.objects.create(
-            image=image,
-            **validated_data
-        )
-        return recipes
+        fields = ('id', 'name', 'image', 'cooking_time')
+        read_only_fields = ('id', 'name', 'image', 'cooking_time')
