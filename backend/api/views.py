@@ -1,21 +1,27 @@
-from django.shortcuts import get_object_or_404
+from typing import Union
+
+from django.http import FileResponse
 from django_filters import rest_framework as drf_filter
-from rest_framework import status, viewsets
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from api.utils.filters import IngredientSearchFilter, RecipeFilter
 from api.utils.pagination import LimitPageNumberPagination
 from api.utils.permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
+from services.api_services import (add_obj, create_buy_list, create_pdf_file,
+                                   delete_obj)
 
-from .models import Favorite, Ingredient, Recipe, Tag
+from .models import Cart, Favorite, Ingredient, IngredientAmount, Recipe, Tag
 from .serializers import (IngredientSerializer, RecipeSerializer,
                           ShortRecipeSerializer, TagSerializer)
 
 
 class TagsViewSet(ReadOnlyModelViewSet):
+    """Tag view set."""
     http_method_names = ['get']
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
@@ -23,6 +29,7 @@ class TagsViewSet(ReadOnlyModelViewSet):
 
 
 class IngredientsViewSet(ReadOnlyModelViewSet):
+    """Ingredients view set."""
     http_method_names = ['get']
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
@@ -32,6 +39,7 @@ class IngredientsViewSet(ReadOnlyModelViewSet):
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
+    """Recipes view set."""
     http_method_names = ['get', 'post', 'patch', 'delete']
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
@@ -41,6 +49,9 @@ class RecipesViewSet(viewsets.ModelViewSet):
     filterset_class = RecipeFilter
 
     def perform_create(self, serializer) -> None:
+        """
+        Specifies the behavior of the need to match author and request.user.
+        """
         serializer.save(author=self.request.user)
 
     @action(
@@ -48,28 +59,50 @@ class RecipesViewSet(viewsets.ModelViewSet):
         methods=['post', 'delete'],
         permission_classes=[IsAuthenticated]
     )
-    def favorite(self, request, pk=None):
+    def favorite(
+            self, request: Request, pk: int = None
+    ) -> Union[Response, None]:
+        """
+        Create or delete favorite-recipe relations
+        or return None, if http method not allowed.
+        """
         if request.method == 'POST':
-            return self.add_obj(Favorite, request.user, pk)
-        elif request.method == 'DELETE':
-            return self.delete_obj(Favorite, request.user, pk)
+            return add_obj(Favorite, ShortRecipeSerializer, request.user, pk)
+        if request.method == 'DELETE':
+            return delete_obj(Favorite, request.user, pk)
         return None
 
-    def add_obj(self, model, user, pk):
-        if model.objects.filter(user=user, recipe__id=pk).exists():
-            return Response({
-                'errors': 'Рецепт уже добавлен в список'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        recipe = get_object_or_404(Recipe, id=pk)
-        model.objects.create(user=user, recipe=recipe)
-        serializer = ShortRecipeSerializer(recipe)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        permission_classes=[IsAuthenticated]
+    )
+    def shopping_cart(
+            self, request: Request, pk: int = None
+    ) -> Union[Response, None]:
+        """
+        Add or remove recipe from shopping cart
+        or return None, if http method not allowed.
+        """
+        if request.method == 'POST':
+            return add_obj(Cart, ShortRecipeSerializer, request.user, pk)
+        if request.method == 'DELETE':
+            return delete_obj(Cart, request.user, pk)
+        return None
 
-    def delete_obj(self, model, user, pk):
-        obj = model.objects.filter(user=user, recipe__id=pk)
-        if obj.exists():
-            obj.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response({
-            'errors': 'Рецепт уже удален'
-        }, status=status.HTTP_400_BAD_REQUEST)
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[IsAuthenticated]
+    )
+    def download_shopping_cart(self, request: Request) -> FileResponse:
+        ingredients = IngredientAmount.objects.filter(
+            recipe__cart__user=request.user).values_list(
+            'ingredient__name', 'ingredient__measurement_unit',
+            'amount')
+
+        buy_list = create_buy_list(ingredients)
+        pdf_file = create_pdf_file(buy_list)
+        return FileResponse(
+            pdf_file, as_attachment=True, filename='buylist.pdf'
+        )
