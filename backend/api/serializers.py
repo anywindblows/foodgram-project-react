@@ -1,4 +1,4 @@
-from typing import Dict, List, OrderedDict, Union
+from typing import Dict, List, Union
 
 from django.contrib.auth import get_user_model
 from drf_extra_fields.fields import Base64ImageField
@@ -78,7 +78,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time'
         )
 
-    def validate(self, data: OrderedDict) -> OrderedDict:
+    def validate(self, data):
         """Validate data before create new relations."""
         ingredients, tags = (
             self.initial_data.get('ingredients'),
