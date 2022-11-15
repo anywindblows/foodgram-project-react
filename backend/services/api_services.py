@@ -9,7 +9,7 @@ from reportlab.pdfgen import canvas
 from rest_framework import serializers, status
 from rest_framework.response import Response
 
-from api.models import Cart, Favorite, Ingredient, IngredientAmount, Recipe
+from api.v1.models import Cart, Favorite, Ingredient, IngredientRecipe, Recipe
 from config import config_messages as msg
 
 
@@ -18,7 +18,7 @@ def create_ingredient_amount_relations(
 ) -> None:
     """Create relations between recipe and ingredientsamount models."""
     for ingredient in ingredients:
-        IngredientAmount.objects.create(
+        IngredientRecipe.objects.create(
             ingredient_id=ingredient['id'],
             amount=ingredient['amount'],
             recipe=recipe

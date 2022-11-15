@@ -79,7 +79,7 @@ class UserModelAdmin(BaseUserAdmin):
                        'is_superuser', 'is_staff', 'is_active')
         }),)
     search_fields = ('email', 'username')
-    ordering = ('username',)
+    ordering = ('-username',)
     filter_horizontal = ()
 
 

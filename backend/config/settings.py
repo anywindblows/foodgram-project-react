@@ -100,9 +100,9 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     'SERIALIZERS': {
-        'current_user': 'api.serializers.UserSerializer',
-        'user': 'api.serializers.UserSerializer',
-        'user_list': 'api.serializers.UserSerializer',
+        'current_user': 'api.v1.serializers.UserSerializer',
+        'user': 'api.v1.serializers.UserSerializer',
+        'user_list': 'api.v1.serializers.UserSerializer',
     },
     'PERMISSIONS': {
         'user': ['rest_framework.permissions.IsAuthenticated'],

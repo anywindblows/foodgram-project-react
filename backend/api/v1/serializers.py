@@ -10,7 +10,7 @@ from services.api_services import (create_ingredient_amount_relations,
                                    get_exists_models_relations, validate_value)
 from users.models import Follow
 
-from .models import Ingredient, IngredientAmount, Recipe, Tag
+from .models import Ingredient, IngredientRecipe, Recipe, Tag
 
 User = get_user_model()
 
@@ -39,8 +39,8 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit')
 
 
-class IngredientAmountSerializer(serializers.ModelSerializer):
-    """Serializer for IngredientAmountModel."""
+class IngredientRecipeSerializer(serializers.ModelSerializer):
+    """Serializer for IngredientRecipeModel."""
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
@@ -48,11 +48,11 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = IngredientAmount
+        model = IngredientRecipe
         fields = ('id', 'name', 'measurement_unit', 'amount',)
         validators = [
             UniqueTogetherValidator(
-                queryset=IngredientAmount.objects.all(),
+                queryset=IngredientRecipe.objects.all(),
                 fields=['ingredient', 'recipe']
             )
         ]
@@ -63,8 +63,8 @@ class RecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
     author = UserSerializer(read_only=True)
     tags = TagSerializer(read_only=True, many=True)
-    ingredients = IngredientAmountSerializer(
-        source='ingredientamount_set',
+    ingredients = IngredientRecipeSerializer(
+        source='ingredientrecipe_set',
         many=True,
         read_only=True
     )
@@ -144,7 +144,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         tags = self.initial_data.get('tags')
         instance.tags.set(tags)
 
-        IngredientAmount.objects.filter(recipe=instance).all().delete()
+        IngredientRecipe.objects.filter(recipe=instance).all().delete()
 
         create_ingredient_amount_relations(
             validated_data.get('ingredients'),

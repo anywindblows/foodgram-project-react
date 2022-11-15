@@ -95,7 +95,7 @@ class Recipe(models.Model):
 
     ingredients = models.ManyToManyField(
         Ingredient,
-        through='IngredientAmount',
+        through='IngredientRecipe',
         related_name='recipes',
         verbose_name='Ingredients'
     )
@@ -123,7 +123,7 @@ class Recipe(models.Model):
         db_table = 'recipes'
 
 
-class IngredientAmount(models.Model):
+class IngredientRecipe(models.Model):
     """
     Stores a single ingredient amount entry,
     related to :model:`measurement_unit.MeasurementUnit`.
@@ -154,7 +154,7 @@ class IngredientAmount(models.Model):
     class Meta:
         verbose_name = 'Ingredient amount'
         verbose_name_plural = 'Ingredients amount'
-        db_table = 'ingredients_amount'
+        db_table = 'ingredientsrecipes'
 
 
 class Favorite(models.Model):
