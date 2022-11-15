@@ -10,6 +10,7 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 
 from api.models import Cart, Favorite, Ingredient, IngredientAmount, Recipe
+from config import config_messages as msg
 
 
 def create_ingredient_amount_relations(
@@ -34,13 +35,13 @@ def get_exists_models_relations(
     )
 
 
-def add_obj(
+def create_obj(
         model: Type[Union[Favorite, Cart]], serializer, user: Any, pk: int
 ) -> Response:
     """Adding recipe to favorite list or return error (400)."""
     if model.objects.filter(user=user, recipe__id=pk).exists():
         return Response(
-            {'errors': 'Рецепт уже есть в списке вашего избранного.'},
+            {'errors': msg.RECIPE_ALREADY_EXIST},
             status=status.HTTP_400_BAD_REQUEST
         )
     recipe = get_object_or_404(Recipe, id=pk)
@@ -58,7 +59,7 @@ def delete_obj(
         obj.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     return Response(
-        {'errors': f'Не удалось найти рецепт по данному id: {pk}.'},
+        {'errors': f'{msg.CANT_FIND_RECIPE}: {pk}.'},
         status=status.HTTP_400_BAD_REQUEST
     )
 
@@ -68,12 +69,12 @@ def validate_value(value, model=None, field_name=None) -> Type[
 ]:
     """Validate value."""
     if not str(value).isdecimal():
-        raise serializers.ValidationError(f'{value} должно содержать цифру')
+        raise serializers.ValidationError(f'{value} {msg.SHOULD_BE_INTEGER}')
     if model:
         obj = model.objects.filter(id=value)
         if not obj:
             raise serializers.ValidationError(
-                {field_name: f'{value} не существует'}
+                {field_name: f'{value} {msg.NOT_EXIST}'}
             )
         return obj[0]
     return None
@@ -100,7 +101,7 @@ def create_pdf_file(data: Dict[str, dict]) -> io.BytesIO:
     p = canvas.Canvas(buffer)
     print(p.getAvailableFonts())
     p.setFont('DejaVuSerif', size=14)
-    p.drawString(75, 800, 'Список ингредиентов:')
+    p.drawString(75, 800, f'{msg.INGR_LIST}:')
     p.setFont('DejaVuSerif', size=12)
     for i, (name, data) in enumerate(data.items(), 1):
         p.drawString(

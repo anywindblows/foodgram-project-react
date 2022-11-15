@@ -5,6 +5,7 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
+from config import config_messages as msg
 from services.api_services import (create_ingredient_amount_relations,
                                    get_exists_models_relations, validate_value)
 from users.models import Follow
@@ -87,16 +88,16 @@ class RecipeSerializer(serializers.ModelSerializer):
         for value in (ingredients, tags):
             if not isinstance(value, list):
                 raise serializers.ValidationError(
-                    f'"{value}" должен быть в формате "[]"'
+                    f'"{value}" {msg.SHOULD_BE_LIST}.'
                 )
 
         if not ingredients:
             raise serializers.ValidationError(
-                {'ingredients': 'Необходимо добавить хотя бы один игредиент.'}
+                {'ingredients': msg.MIN_ONE_INGREDIENT}
             )
         if not tags:
             raise serializers.ValidationError(
-                {'tags': 'Необходимо добавить хотя бы один тег.'}
+                {'tags': msg.MIN_ONE_TAG}
             )
 
         for tag in tags:
@@ -179,6 +180,7 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
 
 
 class FollowSerializer(serializers.ModelSerializer):
+    """Serializer for FollowModel."""
     id = serializers.ReadOnlyField(source='author.id')
     email = serializers.ReadOnlyField(source='author.email')
     username = serializers.ReadOnlyField(source='author.username')
@@ -197,13 +199,20 @@ class FollowSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_is_subscribed(obj):
+        """Return boolean value of subscribed status."""
         return Follow.objects.filter(user=obj.user, author=obj.author).exists()
 
     @staticmethod
     def get_recipes_count(obj):
+        """Return integer value for the number of recipes."""
         return Recipe.objects.filter(author=obj.author).count()
 
     def get_recipes(self, obj):
+        """
+        Return recipes set.
+        If @param 'recipes_limit' in request
+        returns a set given a slice by constraint.
+        """
         request = self.context.get('request')
         recipes_limit = request.GET.get('recipes_limit')
         queryset = Recipe.objects.filter(author=obj.author)

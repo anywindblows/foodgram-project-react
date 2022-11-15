@@ -12,8 +12,8 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 from api.utils.filters import IngredientSearchFilter, RecipeFilter
 from api.utils.pagination import LimitPageNumberPagination
 from api.utils.permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
-from services.api_services import (add_obj, create_buy_list, create_pdf_file,
-                                   delete_obj)
+from services.api_services import (create_buy_list, create_obj,
+                                   create_pdf_file, delete_obj)
 
 from .models import Cart, Favorite, Ingredient, IngredientAmount, Recipe, Tag
 from .serializers import (IngredientSerializer, RecipeSerializer,
@@ -67,7 +67,8 @@ class RecipesViewSet(viewsets.ModelViewSet):
         or return None, if http method not allowed.
         """
         if request.method == 'POST':
-            return add_obj(Favorite, ShortRecipeSerializer, request.user, pk)
+            return create_obj(Favorite, ShortRecipeSerializer,
+                              request.user, pk)
         if request.method == 'DELETE':
             return delete_obj(Favorite, request.user, pk)
         return None
@@ -85,7 +86,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         or return None, if http method not allowed.
         """
         if request.method == 'POST':
-            return add_obj(Cart, ShortRecipeSerializer, request.user, pk)
+            return create_obj(Cart, ShortRecipeSerializer, request.user, pk)
         if request.method == 'DELETE':
             return delete_obj(Cart, request.user, pk)
         return None

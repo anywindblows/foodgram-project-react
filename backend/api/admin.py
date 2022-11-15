@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Ingredient, IngredientAmount, Recipe, Tag
+from .models import Cart, Favorite, Ingredient, IngredientAmount, Recipe, Tag
 
 
 class TagModelAdmin(admin.ModelAdmin):
@@ -14,12 +14,8 @@ class IngredientModelAdmin(admin.ModelAdmin):
 
 
 class RecipeModelAdmin(admin.ModelAdmin):
-    list_display = [
-        'author', 'name', 'image', 'text', 'cooking_time'
-    ]
-    list_filter = [
-        'author', 'name', 'ingredients', 'tags', 'cooking_time'
-    ]
+    list_display = ['author', 'name', 'image', 'text', 'cooking_time']
+    list_filter = ['author', 'name', 'ingredients', 'tags', 'cooking_time']
 
 
 class IngredientAmountModelAdmin(admin.ModelAdmin):
@@ -27,7 +23,19 @@ class IngredientAmountModelAdmin(admin.ModelAdmin):
     list_filter = ['amount']
 
 
-admin.site.register(Tag, TagModelAdmin)  # TODO: SORT REGISTER IN IMPORT ORDER
-admin.site.register(Ingredient, IngredientModelAdmin)
+class FavoriteModelAdmin(admin.ModelAdmin):
+    list_display = ['recipe', 'user']
+    list_filter = ['recipe', 'user']
+
+
+class CartModelAdmin(admin.ModelAdmin):
+    list_display = ['recipe', 'user']
+    list_filter = ['recipe', 'user']
+
+
+admin.site.register(Tag, TagModelAdmin)
+admin.site.register(Cart, CartModelAdmin)
 admin.site.register(Recipe, RecipeModelAdmin)
+admin.site.register(Favorite, FavoriteModelAdmin)
+admin.site.register(Ingredient, IngredientModelAdmin)
 admin.site.register(IngredientAmount, IngredientAmountModelAdmin)

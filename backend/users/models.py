@@ -2,41 +2,46 @@ from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager,
                                         PermissionsMixin)
 from django.db import models
 
+from config import config_messages as msg
+
 
 class CustomUserManager(BaseUserManager):
     """Custom user manager."""
 
-    def create_user(self, username, password, **kwargs):
+    def _create_user(self, email, username, password, **kwargs):
+        email = self.normalize_email(email)
+        is_staff = kwargs.pop('is_staff', False)
+        is_superuser = kwargs.pop('is_superuser', False)
+        user = self.model(
+            email=email,
+            username=username,
+            is_staff=is_staff,
+            is_superuser=is_superuser,
+            is_active=True,
+            **kwargs
+        )
+        user.set_password(password)
+        user.save(using=self.db)
+        return user
+
+    def create_user(self, email, username, password, **kwargs):
         """Creating a user."""
-        user = self.model(
-            username=username,
-            password=password,
-            **kwargs
-        )
+        return self._create_user(email, username, password, **kwargs)
 
-        user.is_active = True
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-
-    def create_superuser(self, username, password, **kwargs):
+    def create_superuser(self, email, username, password, **kwargs):
         """Creating a superuser."""
-        user = self.model(
-            username=username,
-            password=password,
-            **kwargs
+        return self._create_user(
+            email=email, username=username, password=password,
+            is_staff=True, is_superuser=True, **kwargs
         )
-
-        user.is_active = True
-        user.is_staff = True
-        user.is_superuser = True
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    """Stores a single custom user entry."""
+    """
+    Stores a single custom user entry.
+    Required fields:
+    - email, username, first_name, last_name.
+    """
     email = models.EmailField(
         unique=True,
         max_length=254,
@@ -59,8 +64,16 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name='Last name'
     )
 
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(
+        'active',
+        default=True,
+        help_text=msg.IS_ACTIVE
+    )
+    is_staff = models.BooleanField(
+        'staff status',
+        default=False,
+        help_text=msg.IS_STAFF
+    )
     is_subscribed = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
 
@@ -78,32 +91,39 @@ class User(AbstractBaseUser, PermissionsMixin):
         return f'{self.username}'
 
     class Meta:
+        ordering = ['-id']
         verbose_name = 'User'
         verbose_name_plural = 'Users'
         db_table = 'users'
 
 
 class Follow(models.Model):
+    """
+    Stores a single follow entry, related to:
+    :model:`user.User`,
+    :model:`author.User`.
+    """
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='follower',
-        verbose_name='Подписчик',
+        verbose_name='Follower',
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='following',
-        verbose_name='Автор',
+        verbose_name='Author',
     )
 
     class Meta:
         ordering = ['-id']
-        verbose_name = 'Подписка'
-        verbose_name_plural = 'Подписки'
+        verbose_name = 'Follow'
+        verbose_name_plural = 'Follows'
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'author'],
                 name='unique follow',
             )
         ]
+        db_table = 'follows'

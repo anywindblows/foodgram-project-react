@@ -3,6 +3,8 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from config import config_messages as msg
+
 User = get_user_model()
 
 
@@ -69,7 +71,7 @@ class Recipe(models.Model):
     :model:`ingredients.Ingredient`,
     :model:`tags.Tag`.
     """
-    author = models.ForeignKey(  # TODO: add docstring EVERYWHERE
+    author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         verbose_name='Author'
@@ -105,14 +107,17 @@ class Recipe(models.Model):
 
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Cooking time',
-        validators=[MinValueValidator(limit_value=1)]
+        validators=[MinValueValidator(
+            limit_value=1,
+            message=msg.COOKING_TIME
+        )]
     )
 
     def __str__(self):
         return f'{self.name}'
 
     class Meta:
-        ordering = ['-name']
+        ordering = ['-id']
         verbose_name = 'Recipe'
         verbose_name_plural = 'Recipes'
         db_table = 'recipes'
@@ -136,7 +141,10 @@ class IngredientAmount(models.Model):
     )
 
     amount = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(limit_value=1)],
+        validators=[MinValueValidator(
+            limit_value=1,
+            message=msg.INGREDIENT_AMOUNT
+        )],
         verbose_name='Amount',
     )
 

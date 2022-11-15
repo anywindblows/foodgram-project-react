@@ -4,7 +4,9 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.contrib.auth.models import Group
 
-from .models import User
+from config import config_messages as msg
+
+from .models import Follow, User
 
 
 class UserCreationForm(forms.ModelForm):
@@ -43,11 +45,7 @@ class UserChangeForm(forms.ModelForm):
     """Form for change user password using admin panel."""
     password = ReadOnlyPasswordHashField(
         label="Password",
-        help_text=(
-            "Raw passwords are not stored, so there is no way to see "
-            "this user's password, but you can change the password "
-            "using <a href=\"../password/\">this form</a>."
-        )
+        help_text=msg.CHANGE_PASSWORD
     )
 
     class Meta:
@@ -58,7 +56,7 @@ class UserChangeForm(forms.ModelForm):
         return self.initial['password']
 
 
-class UserAdmin(BaseUserAdmin):
+class UserModelAdmin(BaseUserAdmin):
     """
     User admin panel.
     With custom filter params.
@@ -85,5 +83,11 @@ class UserAdmin(BaseUserAdmin):
     filter_horizontal = ()
 
 
-admin.site.register(User, UserAdmin)
+class FollowModelAdmin(admin.ModelAdmin):
+    list_display = ['user', 'author']
+    list_filter = ['user', 'author']
+
+
+admin.site.register(Follow, FollowModelAdmin)
+admin.site.register(User, UserModelAdmin)
 admin.site.unregister(Group)
