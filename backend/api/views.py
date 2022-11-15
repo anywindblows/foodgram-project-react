@@ -97,6 +97,10 @@ class RecipesViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def download_shopping_cart(self, request: Request) -> FileResponse:
+        """
+        Download ingredients list from recipes
+        in cart at .pdf format.
+        """
         ingredients = IngredientAmount.objects.filter(
             recipe__cart__user=request.user).values_list(
             'ingredient__name', 'ingredient__measurement_unit',
