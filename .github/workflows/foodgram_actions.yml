@@ -68,8 +68,10 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/frontend
             sudo docker-compose stop
-            sudo docker-compose rm web
+            sudo docker-compose rm backend
             rm -Rf .env
             touch .env
             echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> .env
