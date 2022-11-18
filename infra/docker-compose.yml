@@ -18,9 +18,10 @@ services:
       - ../frontend/:/app/result_build/
 
   backend:
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
+#    build:
+#      context: ../backend
+#      dockerfile: Dockerfile
+    image: anywindblows/foodgram:latest
     container_name: backend
     ports:
       - "8000:8000"
