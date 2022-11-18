@@ -25,12 +25,10 @@ jobs:
         pip install flake8 pep8-naming flake8-broken-line flake8-return flake8-isort pytest
         pip install -r backend/requirements.txt
 
-    - name: Test with flake8 and pytest
+    - name: Test with flake8
       run: |
         # запуск проверки проекта по flake8
         python -m flake8
-        # запуск проверки проекта pytest
-        python -m pytest
 
   build_and_push_to_docker_hub:
     name: Push Docker image to Docker Hub
