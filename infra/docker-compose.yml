@@ -9,18 +9,13 @@ services:
       - ./.env
 
   frontend:
-    build:
-      context: ../frontend/
-      dockerfile: Dockerfile
+    image: anywindblows/frontend:latest
     container_name: frontend
     restart: always
     volumes:
       - ../frontend/:/app/result_build/
 
   backend:
-#    build:
-#      context: ../backend
-#      dockerfile: Dockerfile
     image: anywindblows/foodgram:latest
     container_name: backend
     ports:
