@@ -9,15 +9,15 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from api.utils.filters import IngredientSearchFilter, RecipeFilter
-from api.utils.pagination import LimitPageNumberPagination
-from api.utils.permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
+from api.v1.filters import IngredientSearchFilter, RecipeFilter
+from api.v1.models import (Cart, Favorite, Ingredient, IngredientRecipe,
+                           Recipe, Tag)
+from api.v1.pagination import LimitPageNumberPagination
+from api.v1.permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
+from api.v1.serializers import (IngredientSerializer, RecipeSerializer,
+                                ShortRecipeSerializer, TagSerializer)
 from services.api_services import (create_buy_list, create_obj,
                                    create_pdf_file, delete_obj)
-
-from .models import Cart, Favorite, Ingredient, IngredientAmount, Recipe, Tag
-from .serializers import (IngredientSerializer, RecipeSerializer,
-                          ShortRecipeSerializer, TagSerializer)
 
 
 class TagsViewSet(ReadOnlyModelViewSet):
@@ -101,7 +101,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         Download ingredients list from recipes
         in cart at .pdf format.
         """
-        ingredients = IngredientAmount.objects.filter(
+        ingredients = IngredientRecipe.objects.filter(
             recipe__cart__user=request.user).values_list(
             'ingredient__name', 'ingredient__measurement_unit',
             'amount')

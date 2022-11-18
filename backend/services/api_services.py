@@ -9,7 +9,7 @@ from reportlab.pdfgen import canvas
 from rest_framework import serializers, status
 from rest_framework.response import Response
 
-from api.models import Cart, Favorite, Ingredient, IngredientAmount, Recipe
+from api.v1.models import Cart, Favorite, Ingredient, IngredientRecipe, Recipe
 from config import config_messages as msg
 
 
@@ -18,7 +18,7 @@ def create_ingredient_amount_relations(
 ) -> None:
     """Create relations between recipe and ingredientsamount models."""
     for ingredient in ingredients:
-        IngredientAmount.objects.create(
+        IngredientRecipe.objects.create(
             ingredient_id=ingredient['id'],
             amount=ingredient['amount'],
             recipe=recipe
@@ -67,7 +67,7 @@ def delete_obj(
 def validate_value(value, model=None, field_name=None) -> Type[
     Union[Recipe, Ingredient, None]
 ]:
-    """Validate value."""
+    """Validate value and check is decimal."""
     if not str(value).isdecimal():
         raise serializers.ValidationError(f'{value} {msg.SHOULD_BE_INTEGER}')
     if model:
@@ -80,7 +80,35 @@ def validate_value(value, model=None, field_name=None) -> Type[
     return None
 
 
+def check_data_to_list_isinstance(ingredients: list, tags: list) -> None:
+    """Check data to type (list) and is not None."""
+    for value in (ingredients, tags):
+        if not isinstance(value, list):
+            raise serializers.ValidationError(
+                f'"{value}" {msg.SHOULD_BE_LIST}.'
+            )
+
+
+def check_data_is_not_none(ingredients: list, tags: list) -> None:
+    """Check data is not None."""
+    if not ingredients:
+        raise serializers.ValidationError(
+            {'ingredients': msg.MIN_ONE_INGREDIENT}
+        )
+    if not tags:
+        raise serializers.ValidationError(
+            {'tags': msg.MIN_ONE_TAG}
+        )
+
+
+def check_ingredients_is_unique(ingredients):
+    """Check ingredients and raise error if is not unique."""
+    if len(ingredients) > len({x['id']: x for x in ingredients}.values()):
+        raise serializers.ValidationError(msg.UNIQUE_INGREDIENTS)
+
+
 def create_buy_list(ingredients: QuerySet) -> Dict[str, dict]:
+    """Create buy list with unique ingredients for all recipes in cart."""
     buy_list = dict()
     for ingredient in ingredients:
         if ingredient[0] not in buy_list:
@@ -94,12 +122,12 @@ def create_buy_list(ingredients: QuerySet) -> Dict[str, dict]:
 
 
 def create_pdf_file(data: Dict[str, dict]) -> io.BytesIO:
+    """Create pdf file with buy list."""
     height = 770
     width = 75
     buffer = io.BytesIO()
     pdfmetrics.registerFont(TTFont('DejaVuSerif', 'DejaVuSerif.ttf', 'UTF-8'))
     p = canvas.Canvas(buffer)
-    print(p.getAvailableFonts())
     p.setFont('DejaVuSerif', size=14)
     p.drawString(75, 800, f'{msg.INGR_LIST}:')
     p.setFont('DejaVuSerif', size=12)

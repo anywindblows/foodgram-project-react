@@ -1,16 +1,18 @@
-from typing import Dict, List, OrderedDict, Union
+from typing import Dict, List, Union
 
 from django.contrib.auth import get_user_model
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from config import config_messages as msg
-from services.api_services import (create_ingredient_amount_relations,
+from services.api_services import (check_data_is_not_none,
+                                   check_data_to_list_isinstance,
+                                   check_ingredients_is_unique,
+                                   create_ingredient_amount_relations,
                                    get_exists_models_relations, validate_value)
 from users.models import Follow
 
-from .models import Ingredient, IngredientAmount, Recipe, Tag
+from .models import Ingredient, IngredientRecipe, Recipe, Tag
 
 User = get_user_model()
 
@@ -39,8 +41,8 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit')
 
 
-class IngredientAmountSerializer(serializers.ModelSerializer):
-    """Serializer for IngredientAmountModel."""
+class IngredientRecipeSerializer(serializers.ModelSerializer):
+    """Serializer for IngredientRecipeModel."""
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
@@ -48,11 +50,11 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = IngredientAmount
+        model = IngredientRecipe
         fields = ('id', 'name', 'measurement_unit', 'amount',)
         validators = [
             UniqueTogetherValidator(
-                queryset=IngredientAmount.objects.all(),
+                queryset=IngredientRecipe.objects.all(),
                 fields=['ingredient', 'recipe']
             )
         ]
@@ -63,8 +65,8 @@ class RecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
     author = UserSerializer(read_only=True)
     tags = TagSerializer(read_only=True, many=True)
-    ingredients = IngredientAmountSerializer(
-        source='ingredientamount_set',
+    ingredients = IngredientRecipeSerializer(
+        source='ingredientrecipe_set',
         many=True,
         read_only=True
     )
@@ -78,35 +80,26 @@ class RecipeSerializer(serializers.ModelSerializer):
             'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time'
         )
 
-    def validate(self, data: OrderedDict) -> OrderedDict:
+    def validate(self, data):
         """Validate data before create new relations."""
         ingredients, tags = (
             self.initial_data.get('ingredients'),
             self.initial_data.get('tags')
         )
 
-        for value in (ingredients, tags):
-            if not isinstance(value, list):
-                raise serializers.ValidationError(
-                    f'"{value}" {msg.SHOULD_BE_LIST}.'
-                )
-
-        if not ingredients:
-            raise serializers.ValidationError(
-                {'ingredients': msg.MIN_ONE_INGREDIENT}
-            )
-        if not tags:
-            raise serializers.ValidationError(
-                {'tags': msg.MIN_ONE_TAG}
-            )
+        check_data_to_list_isinstance(ingredients, tags)
+        check_data_is_not_none(ingredients, tags)
+        check_ingredients_is_unique(ingredients)
 
         for tag in tags:
             validate_value(tag, Tag, 'Tag')
 
         validated_ing = list()
+
         for ing in ingredients:
             ing_id, amount = ing.get('id'), ing.get('amount')
             ingredient = validate_value(ing_id, Ingredient, 'Ingredient')
+
             validate_value(amount)
             validated_ing.append({'ingredient': ingredient, 'amount': amount})
 
@@ -144,7 +137,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         tags = self.initial_data.get('tags')
         instance.tags.set(tags)
 
-        IngredientAmount.objects.filter(recipe=instance).all().delete()
+        IngredientRecipe.objects.filter(recipe=instance).all().delete()
 
         create_ingredient_amount_relations(
             validated_data.get('ingredients'),

@@ -5,10 +5,9 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import IntegrityError
 
-from api.models import Ingredient
+from api.v1.models import Ingredient
 
 DATA_ROOT = os.path.join(settings.BASE_DIR, '../data/ingredients.json')
-print(settings.BASE_DIR)
 
 
 class Command(BaseCommand):
