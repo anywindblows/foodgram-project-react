@@ -5,8 +5,10 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from config import config_messages as msg
-from services.api_services import (create_ingredient_amount_relations,
+from services.api_services import (check_data_is_not_none,
+                                   check_data_to_list_isinstance,
+                                   check_ingredients_is_unique,
+                                   create_ingredient_amount_relations,
                                    get_exists_models_relations, validate_value)
 from users.models import Follow
 
@@ -85,28 +87,19 @@ class RecipeSerializer(serializers.ModelSerializer):
             self.initial_data.get('tags')
         )
 
-        for value in (ingredients, tags):
-            if not isinstance(value, list):
-                raise serializers.ValidationError(
-                    f'"{value}" {msg.SHOULD_BE_LIST}.'
-                )
-
-        if not ingredients:
-            raise serializers.ValidationError(
-                {'ingredients': msg.MIN_ONE_INGREDIENT}
-            )
-        if not tags:
-            raise serializers.ValidationError(
-                {'tags': msg.MIN_ONE_TAG}
-            )
+        check_data_to_list_isinstance(ingredients, tags)
+        check_data_is_not_none(ingredients, tags)
+        check_ingredients_is_unique(ingredients)
 
         for tag in tags:
             validate_value(tag, Tag, 'Tag')
 
         validated_ing = list()
+
         for ing in ingredients:
             ing_id, amount = ing.get('id'), ing.get('amount')
             ingredient = validate_value(ing_id, Ingredient, 'Ingredient')
+
             validate_value(amount)
             validated_ing.append({'ingredient': ingredient, 'amount': amount})
 
