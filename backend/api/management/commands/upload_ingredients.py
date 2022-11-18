@@ -8,7 +8,6 @@ from django.db import IntegrityError
 from api.v1.models import Ingredient
 
 DATA_ROOT = os.path.join(settings.BASE_DIR, '../data/ingredients.json')
-print(settings.BASE_DIR)
 
 
 class Command(BaseCommand):

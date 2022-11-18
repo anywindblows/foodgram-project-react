@@ -128,7 +128,6 @@ def create_pdf_file(data: Dict[str, dict]) -> io.BytesIO:
     buffer = io.BytesIO()
     pdfmetrics.registerFont(TTFont('DejaVuSerif', 'DejaVuSerif.ttf', 'UTF-8'))
     p = canvas.Canvas(buffer)
-    print(p.getAvailableFonts())
     p.setFont('DejaVuSerif', size=14)
     p.drawString(75, 800, f'{msg.INGR_LIST}:')
     p.setFont('DejaVuSerif', size=12)
