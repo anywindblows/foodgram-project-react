@@ -1,9 +1,8 @@
 from colorfield.fields import ColorField
+from config import config_messages as msg
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
-
-from config import config_messages as msg
 
 User = get_user_model()
 
