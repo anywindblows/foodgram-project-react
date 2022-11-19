@@ -1,8 +1,5 @@
 from typing import Union
 
-from api.v1.pagination import LimitPageNumberPagination
-from api.v1.serializers import FollowSerializer
-from config import config_messages as msg
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
@@ -11,6 +8,10 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+
+from api.v1.pagination import LimitPageNumberPagination
+from api.v1.serializers import FollowSerializer
+from config import config_messages as msg
 from services.user_services import UserServices
 
 from .models import Follow
