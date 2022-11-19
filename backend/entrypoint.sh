@@ -1,1 +1,4 @@
-gunicorn config.wsgi --bind 0.0.0.0:8000
+#!/bin/bash -x
+
+python manage.py migrate --noinput || exit 1
+python manage.py collectstatic
