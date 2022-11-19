@@ -22,7 +22,4 @@ RUN pip install --upgrade pip
 RUN pip install --no-cache /wheels/*
 RUN pip install gunicorn
 
-RUN chmod a+x entrypoint.sh
-ENTRYPOINT [ 'entrypoint.sh' ]
-
 LABEL author='@anywindblows' version='0.1.0'
