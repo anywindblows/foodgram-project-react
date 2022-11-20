@@ -1,7 +1,6 @@
-from django.contrib import admin
-
 from api.v1.models import (Cart, Favorite, Ingredient, IngredientRecipe,
                            Recipe, Tag)
+from django.contrib import admin
 
 
 class TagModelAdmin(admin.ModelAdmin):

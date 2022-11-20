@@ -1,8 +1,7 @@
+from config import config_messages as msg
 from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager,
                                         PermissionsMixin)
 from django.db import models
-
-from config import config_messages as msg
 
 
 class CustomUserManager(BaseUserManager):
