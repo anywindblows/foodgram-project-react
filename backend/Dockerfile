@@ -22,4 +22,8 @@ RUN pip install --upgrade pip
 RUN pip install --no-cache /wheels/*
 RUN pip install gunicorn
 
+RUN mkdir -p /usr/share/fonts/truetype/
+RUN install -m644 ./fonts/DejaVuSerif.ttf /usr/share/fonts/truetype/
+RUN rm ./fonts/DejaVuSerif.ttf
+
 LABEL author='@anywindblows' version='0.1.0'
