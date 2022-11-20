@@ -6,7 +6,9 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import IntegrityError
 
-DATA_ROOT = os.path.join(settings.BASE_DIR, '../data/ingredients.json')
+DATA_ROOT = os.path.join(
+    settings.BASE_DIR, 'data/ingredients.json'
+)
 
 
 class Command(BaseCommand):
