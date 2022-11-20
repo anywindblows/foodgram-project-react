@@ -16,9 +16,13 @@ class IngredientModelAdmin(admin.ModelAdmin):
 
 
 class RecipeModelAdmin(admin.ModelAdmin):
-    list_display = ['author', 'name', 'image', 'text', 'cooking_time']
-    list_filter = ['author', 'name', 'ingredients', 'tags', 'cooking_time']
+    list_display = ['author', 'name', 'get_favorite_count']
+    list_filter = ['tags']
     ordering = ('id',)
+
+    @staticmethod
+    def get_favorite_count(obj):
+        return obj.favorites.count()
 
 
 class IngredientRecipeModelAdmin(admin.ModelAdmin):
