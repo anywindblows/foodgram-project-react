@@ -64,7 +64,7 @@ class UserModelAdmin(BaseUserAdmin):
     add_form = UserCreationForm
 
     list_display = ('email', 'username')
-    list_filter = ('email', 'username')
+    list_filter = ('is_superuser', 'is_staff', 'is_active')
     fieldsets = (('Personal info', {
         'fields': ('email', 'username', 'first_name', 'last_name',
                    'password', 'is_superuser', 'is_staff', 'is_active')
