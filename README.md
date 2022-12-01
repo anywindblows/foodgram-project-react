@@ -8,14 +8,6 @@
 [![GitHub%20Actions](https://img.shields.io/badge/-GitHub%20Actions-464646?style=flat-square&logo=GitHub%20actions)](https://github.com/features/actions)
 [![Yandex.Cloud](https://img.shields.io/badge/-Yandex.Cloud-464646?style=flat-square&logo=Yandex.Cloud)](https://cloud.yandex.ru/)
 
-#### IP: 178.154.203.237
-
-#### users:
-```
-admin@mail.ru  |   admin2@mail.ru
-admin          |   admin
-```
-
 # Foodgram
 
 Платформа для публикации рецептов. Пользователи публикуют рецепты, подписываются
@@ -49,7 +41,7 @@ admin          |   admin
 
     sudo docker-compose up -d
 
-#### После сборки выполните команды):
+#### После сборки выполните команды:
     
     sudo docker-compose exec -it backend bash
     
